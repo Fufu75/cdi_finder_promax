@@ -1,5 +1,7 @@
 # CDI Finder — Agent de candidature
 
+https://cdi-finder.vercel.app
+
 Application web qui t'aide à postuler : tu colles une offre d'emploi, l'agent génère un
 **CV adapté (compatible ATS)** et une **lettre de motivation** en `.docx`, puis tu suis
 tes candidatures. Multi-comptes, chacun avec sa propre clé API Anthropic.
