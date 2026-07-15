@@ -29,6 +29,7 @@ create table if not exists public.candidatures (
   type_contrat    text,
   lien_offre      text,
   notes           text,
+  langue          text not null default 'fr',           -- fr | en
   statut          text not null default 'brouillon',   -- brouillon | envoyee | entretien | refus | offre
   offre_texte     text,                                  -- texte brut de l'offre
   offre_analysee  jsonb,                                 -- JSON structuré (analyse LLM)
@@ -39,6 +40,9 @@ create table if not exists public.candidatures (
 );
 
 create index if not exists candidatures_user_id_idx on public.candidatures (user_id, created_at desc);
+
+-- Mise à jour pour une base déjà créée (idempotent) : ajoute la colonne langue si absente.
+alter table public.candidatures add column if not exists langue text not null default 'fr';
 
 -- ─── Row Level Security : chacun ne voit QUE ses propres données ────────────
 alter table public.profiles      enable row level security;

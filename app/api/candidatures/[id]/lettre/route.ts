@@ -14,10 +14,12 @@ export async function GET(
     return NextResponse.json({ error: "Lettre introuvable." }, { status: 404 });
   }
 
+  const langue = cand.langue === "en" ? "en" : "fr";
   const buffer = await buildLettreDocx(
     cand.lettre,
     profil.identite ?? {},
-    cand.offre_analysee
+    cand.offre_analysee,
+    langue
   );
   const nom = `Lettre_${slug(cand.poste, "poste")}_${slug(cand.entreprise, "entreprise")}.docx`;
 

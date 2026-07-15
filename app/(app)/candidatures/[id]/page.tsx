@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getCandidature } from "@/lib/data";
 import { deleteCandidature } from "../actions";
 import StatutSelect from "./StatutSelect";
+import StatutBadge from "@/components/StatutBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -24,32 +25,45 @@ export default async function CandidaturePage({
         ← Retour aux candidatures
       </Link>
 
-      <div className="flex items-start justify-between mt-3 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            {c.poste ?? "Poste"}
-          </h1>
-          <p className="text-slate-500 mt-1">
-            {[c.entreprise, c.lieu, c.type_contrat].filter(Boolean).join(" · ") || "—"}
-          </p>
+      <div className="mt-3 mb-6">
+        <h1 className="text-2xl font-bold text-slate-900">{c.poste ?? "Poste"}</h1>
+        <p className="text-slate-500 mt-1">
+          {[c.entreprise, c.lieu, c.type_contrat].filter(Boolean).join(" · ") || "—"}
+        </p>
+      </div>
+
+      {/* Statut — bien visible */}
+      <div className="mb-8 rounded-xl border-2 border-brand-100 bg-brand-50/60 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-semibold text-slate-700">
+            Statut de la candidature
+          </span>
+          <StatutBadge statut={c.statut} />
         </div>
-        <StatutSelect id={c.id} current={c.statut} />
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Mettre à jour :</span>
+          <StatutSelect id={c.id} current={c.statut} />
+        </div>
       </div>
 
       {/* Téléchargements */}
       <div className="flex flex-wrap gap-3 mb-8">
-        <a
-          href={`/api/candidatures/${c.id}/cv`}
-          className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-700 transition"
-        >
-          ⬇️ Télécharger le CV (.docx)
-        </a>
-        <a
-          href={`/api/candidatures/${c.id}/lettre`}
-          className="rounded-lg border border-brand-600 px-4 py-2.5 text-sm font-medium text-brand-700 hover:bg-brand-50 transition"
-        >
-          ⬇️ Télécharger la lettre (.docx)
-        </a>
+        {cv && (
+          <a
+            href={`/api/candidatures/${c.id}/cv`}
+            className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-700 transition"
+          >
+            ⬇️ Télécharger le CV (.docx)
+          </a>
+        )}
+        {c.lettre && (
+          <a
+            href={`/api/candidatures/${c.id}/lettre`}
+            className="rounded-lg border border-brand-600 px-4 py-2.5 text-sm font-medium text-brand-700 hover:bg-brand-50 transition"
+          >
+            ⬇️ Télécharger la lettre (.docx)
+          </a>
+        )}
         {c.lien_offre && (
           <a
             href={c.lien_offre}

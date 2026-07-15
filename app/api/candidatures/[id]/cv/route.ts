@@ -14,7 +14,8 @@ export async function GET(
     return NextResponse.json({ error: "CV introuvable." }, { status: 404 });
   }
 
-  const buffer = await buildCvDocx(cand.cv_data, profil.identite ?? {});
+  const langue = cand.langue === "en" ? "en" : "fr";
+  const buffer = await buildCvDocx(cand.cv_data, profil.identite ?? {}, langue);
   const nom = `CV_${slug(cand.poste, "poste")}_${slug(cand.entreprise, "entreprise")}.docx`;
 
   return new NextResponse(new Uint8Array(buffer), {

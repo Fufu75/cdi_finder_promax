@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ["docx"],
+  serverExternalPackages: ["docx", "mammoth", "unpdf"],
 };
 
 export default nextConfig;

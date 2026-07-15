@@ -9,6 +9,33 @@ import {
 } from "docx";
 import type { CvData, Identite, OffreAnalysee } from "./types";
 
+type Langue = "fr" | "en";
+
+const L: Record<Langue, Record<string, string>> = {
+  fr: {
+    candidat: "Candidat",
+    profil: "Profil",
+    experiences: "Expériences professionnelles",
+    formation: "Formation",
+    projets: "Projets",
+    competences: "Compétences",
+    langues: "Langues",
+    attention: "À l'attention de",
+    objet: "Objet : Candidature au poste de",
+  },
+  en: {
+    candidat: "Candidate",
+    profil: "Summary",
+    experiences: "Professional experience",
+    formation: "Education",
+    projets: "Projects",
+    competences: "Skills",
+    langues: "Languages",
+    attention: "To",
+    objet: "Subject: Application for the position of",
+  },
+};
+
 function heading(text: string): Paragraph {
   return new Paragraph({
     heading: HeadingLevel.HEADING_2,
@@ -34,7 +61,12 @@ function bullet(text: string): Paragraph {
   });
 }
 
-export async function buildCvDocx(cv: CvData, identite: Identite): Promise<Buffer> {
+export async function buildCvDocx(
+  cv: CvData,
+  identite: Identite,
+  langue: Langue = "fr"
+): Promise<Buffer> {
+  const t = L[langue] ?? L.fr;
   const children: Paragraph[] = [];
 
   const nomComplet = [identite.prenom, identite.nom].filter(Boolean).join(" ");
@@ -42,7 +74,7 @@ export async function buildCvDocx(cv: CvData, identite: Identite): Promise<Buffe
     new Paragraph({
       alignment: AlignmentType.CENTER,
       spacing: { after: 40 },
-      children: [new TextRun({ text: nomComplet || "Candidat", bold: true, size: 36 })],
+      children: [new TextRun({ text: nomComplet || t.candidat, bold: true, size: 36 })],
     })
   );
   if (cv.titre_cv) {
@@ -75,12 +107,12 @@ export async function buildCvDocx(cv: CvData, identite: Identite): Promise<Buffe
   }
 
   if (cv.resume) {
-    children.push(heading("Profil"));
+    children.push(heading(t.profil));
     children.push(line(cv.resume));
   }
 
   if (cv.experiences?.length) {
-    children.push(heading("Expériences professionnelles"));
+    children.push(heading(t.experiences));
     for (const exp of cv.experiences) {
       const entete = [exp.intitule, exp.entreprise].filter(Boolean).join(" — ");
       children.push(line(entete, { bold: true }));
@@ -91,7 +123,7 @@ export async function buildCvDocx(cv: CvData, identite: Identite): Promise<Buffe
   }
 
   if (cv.formations?.length) {
-    children.push(heading("Formation"));
+    children.push(heading(t.formation));
     for (const f of cv.formations) {
       children.push(line([f.diplome, f.etablissement].filter(Boolean).join(" — "), { bold: true }));
       const sous = [f.lieu, f.periode].filter(Boolean).join(" · ");
@@ -101,7 +133,7 @@ export async function buildCvDocx(cv: CvData, identite: Identite): Promise<Buffe
   }
 
   if (cv.projets?.length) {
-    children.push(heading("Projets"));
+    children.push(heading(t.projets));
     for (const p of cv.projets) {
       children.push(line(p.titre, { bold: true }));
       if (p.technologies) children.push(line(p.technologies, { italics: true, size: 20 }));
@@ -110,7 +142,7 @@ export async function buildCvDocx(cv: CvData, identite: Identite): Promise<Buffe
   }
 
   if (cv.competences && Object.keys(cv.competences).length) {
-    children.push(heading("Compétences"));
+    children.push(heading(t.competences));
     for (const [cat, items] of Object.entries(cv.competences)) {
       if (Array.isArray(items) && items.length) {
         children.push(line(`${cat} : ${items.join(", ")}`));
@@ -119,7 +151,7 @@ export async function buildCvDocx(cv: CvData, identite: Identite): Promise<Buffe
   }
 
   if (cv.langues?.length) {
-    children.push(heading("Langues"));
+    children.push(heading(t.langues));
     children.push(line(cv.langues.join("  •  ")));
   }
 
@@ -133,8 +165,10 @@ export async function buildCvDocx(cv: CvData, identite: Identite): Promise<Buffe
 export async function buildLettreDocx(
   lettre: string,
   identite: Identite,
-  offre: OffreAnalysee | null
+  offre: OffreAnalysee | null,
+  langue: Langue = "fr"
 ): Promise<Buffer> {
+  const t = L[langue] ?? L.fr;
   const children: Paragraph[] = [];
   const nomComplet = [identite.prenom, identite.nom].filter(Boolean).join(" ");
 
@@ -145,10 +179,10 @@ export async function buildLettreDocx(
   children.push(new Paragraph({ spacing: { after: 200 }, children: [] }));
 
   if (offre?.entreprise) {
-    children.push(line(`À l'attention de ${offre.entreprise}`, { bold: true }));
+    children.push(line(`${t.attention} ${offre.entreprise}`, { bold: true }));
   }
   if (offre?.poste) {
-    children.push(line(`Objet : Candidature au poste de ${offre.poste}`));
+    children.push(line(`${t.objet} ${offre.poste}`));
   }
   children.push(new Paragraph({ spacing: { after: 200 }, children: [] }));
 

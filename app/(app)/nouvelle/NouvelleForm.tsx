@@ -11,18 +11,25 @@ export default function NouvelleForm({ hasKey }: { hasKey: boolean }) {
   const [url, setUrl] = useState("");
   const [texte, setTexte] = useState("");
   const [notes, setNotes] = useState("");
+  const [produireCv, setProduireCv] = useState(true);
+  const [produireLettre, setProduireLettre] = useState(true);
+  const [langue, setLangue] = useState<"fr" | "en">("fr");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!produireCv && !produireLettre) {
+      setError("Choisis au moins un document à générer.");
+      return;
+    }
     setError(null);
     setLoading(true);
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, url, texte, notes }),
+        body: JSON.stringify({ mode, url, texte, notes, produireCv, produireLettre, langue }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -106,6 +113,50 @@ export default function NouvelleForm({ hasKey }: { hasKey: boolean }) {
         />
       </div>
 
+      <div>
+        <p className="block text-sm font-medium text-slate-700 mb-2">Langue</p>
+        <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
+          {(["fr", "en"] as const).map((l) => (
+            <button
+              key={l}
+              type="button"
+              onClick={() => setLangue(l)}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition ${
+                langue === l ? "bg-brand-600 text-white" : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              {l === "fr" ? "🇫🇷 Français" : "🇬🇧 English"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="block text-sm font-medium text-slate-700 mb-2">
+          Documents à générer
+        </p>
+        <div className="flex gap-4">
+          <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={produireCv}
+              onChange={(e) => setProduireCv(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+            />
+            CV adapté
+          </label>
+          <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={produireLettre}
+              onChange={(e) => setProduireLettre(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+            />
+            Lettre de motivation
+          </label>
+        </div>
+      </div>
+
       {error && (
         <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           {error}
@@ -117,7 +168,17 @@ export default function NouvelleForm({ hasKey }: { hasKey: boolean }) {
         disabled={loading || !hasKey}
         className="rounded-lg bg-brand-600 px-5 py-2.5 font-medium text-white hover:bg-brand-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? "Génération en cours… (30-60 s)" : "Générer CV + Lettre"}
+        {loading
+          ? "Génération en cours… (30-60 s)"
+          : `Générer ${
+              produireCv && produireLettre
+                ? "CV + Lettre"
+                : produireCv
+                  ? "le CV"
+                  : produireLettre
+                    ? "la lettre"
+                    : ""
+            }`}
       </button>
     </form>
   );

@@ -1,10 +1,10 @@
-import { getProfil } from "@/lib/data";
+import { getProfil, getSettings } from "@/lib/data";
 import ProfilForm from "./ProfilForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProfilPage() {
-  const profil = await getProfil();
+  const [profil, settings] = await Promise.all([getProfil(), getSettings()]);
   const initial =
     profil && Object.keys(profil).length > 0
       ? JSON.stringify(profil, null, 2)
@@ -16,7 +16,7 @@ export default async function ProfilPage() {
       <p className="text-slate-500 mb-8">
         Tes expériences, formations et compétences réelles.
       </p>
-      <ProfilForm initial={initial} />
+      <ProfilForm initial={initial} hasKey={settings.hasKey} />
     </div>
   );
 }

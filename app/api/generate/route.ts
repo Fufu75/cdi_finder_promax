@@ -18,6 +18,15 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const mode: string = body?.mode ?? "texte";
   const notes: string | null = body?.notes || null;
+  const produireCv: boolean = body?.produireCv !== false;
+  const produireLettre: boolean = body?.produireLettre !== false;
+  const langue: "fr" | "en" = body?.langue === "en" ? "en" : "fr";
+  if (!produireCv && !produireLettre) {
+    return NextResponse.json(
+      { error: "Choisis au moins un document à générer." },
+      { status: 400 }
+    );
+  }
 
   // 1. Récupérer le texte de l'offre
   let texteOffre: string | null = null;
@@ -69,8 +78,8 @@ export async function POST(request: Request) {
   try {
     const offreAnalysee = await analyserOffre(creds.key, creds.model, texteOffre);
     const [cvData, lettre] = await Promise.all([
-      genererCv(creds.key, creds.model, profil, offreAnalysee),
-      genererLettre(creds.key, creds.model, profil, offreAnalysee),
+      produireCv ? genererCv(creds.key, creds.model, profil, offreAnalysee, langue) : Promise.resolve(null),
+      produireLettre ? genererLettre(creds.key, creds.model, profil, offreAnalysee, langue) : Promise.resolve(null),
     ]);
 
     const { data, error } = await supabase
@@ -83,6 +92,7 @@ export async function POST(request: Request) {
         type_contrat: offreAnalysee.type_contrat ?? null,
         lien_offre: lienOffre,
         notes,
+        langue,
         offre_texte: texteOffre,
         offre_analysee: offreAnalysee,
         cv_data: cvData,

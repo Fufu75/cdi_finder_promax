@@ -82,6 +82,7 @@ export interface Candidature {
   type_contrat: string | null;
   lien_offre: string | null;
   notes: string | null;
+  langue: string | null;
   statut: Statut;
   offre_texte: string | null;
   offre_analysee: OffreAnalysee | null;
