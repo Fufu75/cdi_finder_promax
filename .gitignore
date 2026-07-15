@@ -1,0 +1,28 @@
+# Secrets — ne JAMAIS committer
+.env
+.env.local
+.env*.local
+*.env
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+
+# Python (ancien code local, conservé)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Sorties générées
+sorties/*.docx
+suivi.xlsx
+
+# OS / éditeurs
+.DS_Store
+.vscode/
+.idea/
