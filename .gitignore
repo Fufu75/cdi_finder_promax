@@ -1,8 +1,9 @@
-# Secrets — ne JAMAIS committer
+# Secrets / données personnelles — ne JAMAIS committer
 .env
 .env.local
 .env*.local
 *.env
+profil/profil.json
 
 # Node / Next.js
 node_modules/

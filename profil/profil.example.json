@@ -1,0 +1,52 @@
+{
+  "_note": "Fichier d'exemple (données fictives). L'app web stocke désormais le profil par compte dans Supabase — ce fichier n'est qu'une référence de structure. Ne mets jamais de vraies données personnelles dans un fichier versionné.",
+  "identite": {
+    "prenom": "Prénom",
+    "nom": "Nom",
+    "titre_courant": "Intitulé de poste",
+    "email": "prenom.nom@example.com",
+    "telephone": "+33 6 00 00 00 00",
+    "ville": "Ville, Pays",
+    "linkedin": "linkedin.com/in/identifiant",
+    "github": "github.com/identifiant"
+  },
+  "formations": [
+    {
+      "diplome": "Diplôme",
+      "etablissement": "Établissement",
+      "lieu": "Ville, Pays",
+      "date_debut": "AAAA-MM",
+      "date_fin": "AAAA-MM",
+      "description": "Description courte."
+    }
+  ],
+  "experiences": [
+    {
+      "intitule": "Intitulé du poste",
+      "entreprise": "Entreprise",
+      "lieu": "Ville, Pays",
+      "date_debut": "AAAA-MM",
+      "date_fin": "AAAA-MM",
+      "missions": ["Mission 1.", "Mission 2."],
+      "competences_cles": ["Compétence 1", "Compétence 2"]
+    }
+  ],
+  "projets": [
+    {
+      "titre": "Titre du projet",
+      "technologies": ["Techno 1", "Techno 2"],
+      "description": "Description du projet."
+    }
+  ],
+  "competences": {
+    "langages_programmation": ["Langage 1", "Langage 2"],
+    "data_ia": ["Outil 1"],
+    "cloud": ["Cloud 1"],
+    "autres_outils": ["Outil 1"]
+  },
+  "langues": [
+    { "langue": "Français", "niveau": "Natif" },
+    { "langue": "Anglais", "niveau": "B2" }
+  ],
+  "interets": ["Intérêt 1", "Intérêt 2"]
+}
