@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getDecryptedKey, getProfil } from "@/lib/data";
 import { extraireTexteDepuisUrl } from "@/lib/ingestion";
-import { analyserOffre, genererCv, genererLettre } from "@/lib/anthropic";
+import { analyserOffre, genererCv, genererLettre } from "@/lib/llm";
 
 export const maxDuration = 120; // secondes (Vercel)
 
@@ -76,10 +76,14 @@ export async function POST(request: Request) {
 
   // 3. Analyse + génération via Claude
   try {
-    const offreAnalysee = await analyserOffre(creds.key, creds.model, texteOffre);
+    const offreAnalysee = await analyserOffre(creds.provider, creds.key, creds.model, texteOffre);
     const [cvData, lettre] = await Promise.all([
-      produireCv ? genererCv(creds.key, creds.model, profil, offreAnalysee, langue) : Promise.resolve(null),
-      produireLettre ? genererLettre(creds.key, creds.model, profil, offreAnalysee, langue) : Promise.resolve(null),
+      produireCv
+        ? genererCv(creds.provider, creds.key, creds.model, profil, offreAnalysee, langue)
+        : Promise.resolve(null),
+      produireLettre
+        ? genererLettre(creds.provider, creds.key, creds.model, profil, offreAnalysee, langue)
+        : Promise.resolve(null),
     ]);
 
     const { data, error } = await supabase

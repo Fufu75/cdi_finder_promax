@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getDecryptedKey } from "@/lib/data";
 import { extraireTexteFichier } from "@/lib/cvparse";
-import { extraireProfilDepuisCv } from "@/lib/anthropic";
+import { extraireProfilDepuisCv } from "@/lib/llm";
 
 export const maxDuration = 120;
 
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const profil = await extraireProfilDepuisCv(creds.key, creds.model, cvTexte);
+    const profil = await extraireProfilDepuisCv(creds.provider, creds.key, creds.model, cvTexte);
     return NextResponse.json({ profil });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erreur d'extraction.";

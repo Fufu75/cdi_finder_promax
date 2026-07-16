@@ -3,6 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { encrypt } from "@/lib/crypto";
+import { PROVIDERS, isProvider, type Provider } from "@/lib/providers";
+
+const COLS: Record<Provider, { enc: string; last4: string }> = {
+  anthropic: { enc: "anthropic_key_encrypted", last4: "key_last4" },
+  openai: { enc: "openai_key_encrypted", last4: "openai_key_last4" },
+  gemini: { enc: "gemini_key_encrypted", last4: "gemini_key_last4" },
+};
 
 export async function saveSettings(formData: FormData) {
   const supabase = await createClient();
@@ -11,22 +18,26 @@ export async function saveSettings(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Non authentifié." };
 
+  const providerRaw = String(formData.get("provider") ?? "anthropic");
+  const provider: Provider = isProvider(providerRaw) ? providerRaw : "anthropic";
   const apiKey = String(formData.get("apiKey") ?? "").trim();
-  const model = String(formData.get("model") ?? "claude-opus-4-8");
+  const model = String(formData.get("model") ?? "").trim() || PROVIDERS[provider].defaultModel;
 
   const payload: Record<string, unknown> = {
     user_id: user.id,
+    provider,
     model,
     updated_at: new Date().toISOString(),
   };
 
   // La clé n'est mise à jour que si l'utilisateur en saisit une nouvelle.
   if (apiKey) {
-    if (!apiKey.startsWith("sk-ant-")) {
-      return { error: "La clé doit commencer par « sk-ant- »." };
+    const prefix = PROVIDERS[provider].keyPrefix;
+    if (prefix && !apiKey.startsWith(prefix)) {
+      return { error: `La clé ${PROVIDERS[provider].label} doit commencer par « ${prefix} ».` };
     }
-    payload.anthropic_key_encrypted = encrypt(apiKey);
-    payload.key_last4 = apiKey.slice(-4);
+    payload[COLS[provider].enc] = encrypt(apiKey);
+    payload[COLS[provider].last4] = apiKey.slice(-4);
   }
 
   const { error } = await supabase

@@ -12,12 +12,24 @@ create table if not exists public.profiles (
 
 -- ─── 2. Paramètres utilisateur (clé API Anthropic, chiffrée) ───────────────
 create table if not exists public.user_settings (
-  user_id                uuid primary key references auth.users (id) on delete cascade,
+  user_id                 uuid primary key references auth.users (id) on delete cascade,
+  provider                text not null default 'anthropic',  -- anthropic | openai | gemini
   anthropic_key_encrypted text,          -- chiffrée côté serveur (AES-256-GCM), jamais en clair
-  key_last4              text,           -- 4 derniers caractères pour affichage ("…Q8A")
-  model                  text not null default 'claude-opus-4-8',
-  updated_at             timestamptz not null default now()
+  key_last4               text,          -- 4 derniers caractères (Anthropic) pour affichage
+  openai_key_encrypted    text,
+  openai_key_last4        text,
+  gemini_key_encrypted    text,
+  gemini_key_last4        text,
+  model                   text not null default 'claude-opus-4-8',
+  updated_at              timestamptz not null default now()
 );
+
+-- Mise à jour d'une base déjà créée (idempotent) : multi-fournisseurs.
+alter table public.user_settings add column if not exists provider text not null default 'anthropic';
+alter table public.user_settings add column if not exists openai_key_encrypted text;
+alter table public.user_settings add column if not exists openai_key_last4 text;
+alter table public.user_settings add column if not exists gemini_key_encrypted text;
+alter table public.user_settings add column if not exists gemini_key_last4 text;
 
 -- ─── 3. Candidatures (offre + documents générés) ───────────────────────────
 create table if not exists public.candidatures (

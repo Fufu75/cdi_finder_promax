@@ -2,48 +2,79 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { decrypt } from "@/lib/crypto";
-import { DEFAULT_MODEL } from "@/lib/anthropic";
+import { PROVIDERS, isProvider, type Provider } from "@/lib/providers";
 import type { Candidature, Profil } from "@/lib/types";
 
 export async function getProfil(): Promise<Profil> {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("profiles")
-    .select("data")
-    .maybeSingle();
+  const { data } = await supabase.from("profiles").select("data").maybeSingle();
   return (data?.data as Profil) ?? {};
 }
 
+// Colonnes de stockage (clé chiffrée + 4 derniers caractères) par fournisseur.
+const COLS: Record<Provider, { enc: string; last4: string }> = {
+  anthropic: { enc: "anthropic_key_encrypted", last4: "key_last4" },
+  openai: { enc: "openai_key_encrypted", last4: "openai_key_last4" },
+  gemini: { enc: "gemini_key_encrypted", last4: "gemini_key_last4" },
+};
+
 export interface Settings {
-  hasKey: boolean;
-  keyLast4: string | null;
+  provider: Provider;
   model: string;
+  hasKey: boolean; // le fournisseur actif a-t-il une clé ?
+  keys: Record<Provider, { hasKey: boolean; last4: string | null }>;
 }
 
 export async function getSettings(): Promise<Settings> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("user_settings")
-    .select("anthropic_key_encrypted, key_last4, model")
+    .select(
+      "provider, model, anthropic_key_encrypted, key_last4, openai_key_encrypted, openai_key_last4, gemini_key_encrypted, gemini_key_last4"
+    )
     .maybeSingle();
+
+  const row = (data ?? {}) as Record<string, string | null>;
+  const provider: Provider = isProvider(row.provider) ? row.provider : "anthropic";
+
+  const keys = {
+    anthropic: { hasKey: !!row.anthropic_key_encrypted, last4: row.key_last4 ?? null },
+    openai: { hasKey: !!row.openai_key_encrypted, last4: row.openai_key_last4 ?? null },
+    gemini: { hasKey: !!row.gemini_key_encrypted, last4: row.gemini_key_last4 ?? null },
+  } satisfies Settings["keys"];
+
   return {
-    hasKey: Boolean(data?.anthropic_key_encrypted),
-    keyLast4: data?.key_last4 ?? null,
-    model: data?.model ?? DEFAULT_MODEL,
+    provider,
+    model: row.model || PROVIDERS[provider].defaultModel,
+    hasKey: keys[provider].hasKey,
+    keys,
   };
 }
 
-// Renvoie la clé API en clair (déchiffrée) — usage serveur uniquement, au moment de l'appel.
-export async function getDecryptedKey(): Promise<{ key: string; model: string } | null> {
+// Renvoie la clé du fournisseur actif, en clair — usage serveur uniquement, à l'appel.
+export async function getDecryptedKey(): Promise<{
+  provider: Provider;
+  key: string;
+  model: string;
+} | null> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("user_settings")
-    .select("anthropic_key_encrypted, model")
+    .select(
+      "provider, model, anthropic_key_encrypted, openai_key_encrypted, gemini_key_encrypted"
+    )
     .maybeSingle();
-  if (!data?.anthropic_key_encrypted) return null;
+  if (!data) return null;
+
+  const row = data as Record<string, string | null>;
+  const provider: Provider = isProvider(row.provider) ? row.provider : "anthropic";
+  const enc = row[COLS[provider].enc];
+  if (!enc) return null;
+
   return {
-    key: decrypt(data.anthropic_key_encrypted),
-    model: data.model ?? DEFAULT_MODEL,
+    provider,
+    key: decrypt(enc),
+    model: row.model || PROVIDERS[provider].defaultModel,
   };
 }
 

@@ -9,12 +9,13 @@ export default async function ParametresPage() {
     <div>
       <h1 className="text-2xl font-bold text-slate-900 mb-1">Paramètres</h1>
       <p className="text-slate-500 mb-8">
-        Ta clé API Anthropic et le modèle utilisé pour générer tes documents.
+        Choisis ton fournisseur d'IA, saisis ta clé API (chiffrée) et le modèle utilisé pour
+        générer tes documents.
       </p>
       <ParametresForm
-        hasKey={settings.hasKey}
-        keyLast4={settings.keyLast4}
-        model={settings.model}
+        initialProvider={settings.provider}
+        initialModel={settings.model}
+        keys={settings.keys}
       />
     </div>
   );
