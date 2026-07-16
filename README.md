@@ -4,7 +4,8 @@ https://cdi-finder.vercel.app
 
 Application web qui t'aide à postuler : tu colles une offre d'emploi, l'agent génère un
 **CV adapté (compatible ATS)** et une **lettre de motivation** en `.docx`, puis tu suis
-tes candidatures. Multi-comptes, chacun avec sa propre clé API Anthropic.
+tes candidatures. Multi-comptes : chacun choisit son fournisseur d'IA — gratuit, ou sa
+propre clé API.
 
 > **Le CV n'invente jamais rien** : il sélectionne, réordonne et reformule uniquement tes
 > vraies expériences pour coller aux mots-clés de l'offre.
@@ -14,9 +15,10 @@ tes candidatures. Multi-comptes, chacun avec sa propre clé API Anthropic.
 ## ✨ Fonctionnalités
 
 - 🔐 **Comptes personnels** — connexion e-mail, données isolées par utilisateur (RLS Postgres).
-- 🔑 **Ta clé, ton usage** — chaque compte saisit sa propre clé API Anthropic, **chiffrée**
-  (AES-256-GCM) avant stockage.
-- 📄 **Import de CV** — dépose ton CV (PDF / DOCX) ou colle son texte : Claude en extrait
+- 🎁 **Gratuit par défaut** — modèles open-source (Llama…) via Groq, aucune clé à saisir.
+- 🔑 **Ou ta clé, ton usage** — **Anthropic**, **OpenAI** ou **Gemini** : ta clé est
+  **chiffrée** (AES-256-GCM) avant stockage, jamais renvoyée au navigateur.
+- 📄 **Import de CV** — dépose ton CV (PDF / DOCX) ou colle son texte : le modèle en extrait
   automatiquement ton profil (tu relis avant d'enregistrer).
 - 🎯 **Génération ciblée** — colle une offre (texte ou URL) → CV + lettre adaptés aux
   mots-clés ATS de l'offre.
@@ -28,7 +30,7 @@ tes candidatures. Multi-comptes, chacun avec sa propre clé API Anthropic.
 ## 🧱 Stack
 
 Next.js 15 (App Router, TypeScript) · Tailwind CSS · Supabase (Postgres + Auth) ·
-Anthropic Claude · docx / unpdf / mammoth · déployé sur Vercel.
+Anthropic Claude / OpenAI / Gemini / Groq · docx / unpdf / mammoth · déployé sur Vercel.
 
 ---
 
@@ -57,21 +59,30 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 → valeur de `APP_ENCRYPTION_KEY` (64 caractères). **Ne la perds pas** : sans elle, les clés
 API déjà enregistrées deviennent illisibles.
 
-### 3. Lancer en local
+### 3. Accès gratuit (optionnel)
+
+Le fournisseur **« Gratuit (open-source) »** fait tourner des modèles Llama via
+[Groq](https://console.groq.com/keys) avec **une clé serveur partagée** : les utilisateurs
+n'ont alors aucune clé à saisir. Crée une clé gratuite → `GROQ_API_KEY`.
+
+Laisse la variable vide pour désactiver le mode gratuit (chacun devra fournir sa clé).
+
+### 4. Lancer en local
 
 ```bash
-cp .env.local.example .env.local      # puis remplis les 4 valeurs
+cp .env.local.example .env.local      # puis remplis les valeurs
 npm install
 npm run dev                           # http://localhost:3000
 ```
 
-Crée un compte → **Paramètres** (clé Anthropic) → **Mon profil** (importe ton CV) →
+Crée un compte → **Paramètres** (mode gratuit, ou ta clé) → **Mon profil** (importe ton CV) →
 **Nouvelle candidature**.
 
-### 4. Déployer sur Vercel
+### 5. Déployer sur Vercel
 
 1. Importe le dépôt GitHub sur [vercel.com](https://vercel.com).
-2. **Settings → Environment Variables** : ajoute les **4** variables ci-dessus.
+2. **Settings → Environment Variables** : ajoute les variables ci-dessus
+   (`GROQ_API_KEY` incluse si tu veux le mode gratuit en ligne).
 3. **Deploy**. Chaque `git push` redéploie automatiquement.
 
 ---
