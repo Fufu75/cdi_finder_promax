@@ -18,7 +18,12 @@ export const PROVIDERS: Record<
     keyPrefix: "",
     keyHint: "",
     defaultModel: "llama-3.3-70b-versatile",
-    models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it"],
+    models: [
+      "llama-3.3-70b-versatile",
+      "openai/gpt-oss-120b",
+      "meta-llama/llama-4-scout-17b-16e-instruct",
+      "llama-3.1-8b-instant",
+    ],
     shared: true,
   },
   anthropic: {
