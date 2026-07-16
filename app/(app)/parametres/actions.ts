@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { encrypt } from "@/lib/crypto";
 import { PROVIDERS, isProvider, type Provider } from "@/lib/providers";
 
-const COLS: Record<Provider, { enc: string; last4: string }> = {
+const COLS: Record<Exclude<Provider, "free">, { enc: string; last4: string }> = {
   anthropic: { enc: "anthropic_key_encrypted", last4: "key_last4" },
   openai: { enc: "openai_key_encrypted", last4: "openai_key_last4" },
   gemini: { enc: "gemini_key_encrypted", last4: "gemini_key_last4" },
@@ -30,8 +30,8 @@ export async function saveSettings(formData: FormData) {
     updated_at: new Date().toISOString(),
   };
 
-  // La clé n'est mise à jour que si l'utilisateur en saisit une nouvelle.
-  if (apiKey) {
+  // "free" n'utilise pas de clé utilisateur. Sinon, la clé n'est mise à jour que si saisie.
+  if (apiKey && provider !== "free") {
     const prefix = PROVIDERS[provider].keyPrefix;
     if (prefix && !apiKey.startsWith(prefix)) {
       return { error: `La clé ${PROVIDERS[provider].label} doit commencer par « ${prefix} ».` };

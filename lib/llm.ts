@@ -25,6 +25,18 @@ async function complete(
     return block && block.type === "text" ? block.text.trim() : "";
   }
 
+  // "free" = modèles open-source via Groq (endpoint compatible OpenAI, clé serveur partagée).
+  if (provider === "free") {
+    const OpenAI = (await import("openai")).default;
+    const client = new OpenAI({ apiKey, baseURL: "https://api.groq.com/openai/v1" });
+    const res = await client.chat.completions.create({
+      model,
+      max_tokens: maxTokens,
+      messages: [{ role: "user", content: prompt }],
+    });
+    return (res.choices[0]?.message?.content ?? "").trim();
+  }
+
   if (provider === "openai") {
     const OpenAI = (await import("openai")).default;
     const client = new OpenAI({ apiKey });

@@ -59,6 +59,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ profil });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erreur d'extraction.";
-    return NextResponse.json({ error: `Claude : ${msg}` }, { status: 502 });
+    return NextResponse.json({ error: `Erreur du modèle : ${msg}` }, { status: 502 });
   }
 }

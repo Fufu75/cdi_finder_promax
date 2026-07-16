@@ -1,11 +1,26 @@
 // Métadonnées des fournisseurs LLM — sûr côté client (aucun SDK importé ici).
 
-export type Provider = "anthropic" | "openai" | "gemini";
+export type Provider = "free" | "anthropic" | "openai" | "gemini";
 
 export const PROVIDERS: Record<
   Provider,
-  { label: string; keyPrefix: string; keyHint: string; defaultModel: string; models: string[] }
+  {
+    label: string;
+    keyPrefix: string;
+    keyHint: string;
+    defaultModel: string;
+    models: string[];
+    shared?: boolean; // true = clé partagée côté serveur (pas de clé utilisateur)
+  }
 > = {
+  free: {
+    label: "Gratuit (open-source)",
+    keyPrefix: "",
+    keyHint: "",
+    defaultModel: "llama-3.3-70b-versatile",
+    models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it"],
+    shared: true,
+  },
   anthropic: {
     label: "Anthropic (Claude)",
     keyPrefix: "sk-ant-",
@@ -29,8 +44,8 @@ export const PROVIDERS: Record<
   },
 };
 
-export const PROVIDER_LIST: Provider[] = ["anthropic", "openai", "gemini"];
+export const PROVIDER_LIST: Provider[] = ["free", "anthropic", "openai", "gemini"];
 
 export function isProvider(v: unknown): v is Provider {
-  return v === "anthropic" || v === "openai" || v === "gemini";
+  return v === "free" || v === "anthropic" || v === "openai" || v === "gemini";
 }

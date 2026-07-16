@@ -4,7 +4,7 @@ import { useState } from "react";
 import { saveSettings } from "./actions";
 import { PROVIDERS, PROVIDER_LIST, type Provider } from "@/lib/providers";
 
-const KEY_LINK: Record<Provider, string> = {
+const KEY_LINK: Record<Exclude<Provider, "free">, string> = {
   anthropic: "https://console.anthropic.com/settings/keys",
   openai: "https://platform.openai.com/api-keys",
   gemini: "https://aistudio.google.com/apikey",
@@ -54,51 +54,75 @@ export default function ParametresForm({
         <label className="block text-sm font-medium text-slate-700 mb-2">
           Fournisseur d'IA
         </label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {PROVIDER_LIST.map((p) => (
             <button
               key={p}
               type="button"
               onClick={() => switchProvider(p)}
-              className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition ${
+              className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition text-left ${
                 provider === p
                   ? "border-brand-500 bg-brand-50 text-brand-700"
                   : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
               }`}
             >
               {PROVIDERS[p].label}
-              {keys[p].hasKey && <span className="ml-1 text-green-600">✓</span>}
+              {p === "free" ? (
+                <span className="ml-1 rounded-full bg-green-100 text-green-700 px-1.5 py-0.5 text-xs">
+                  gratuit
+                </span>
+              ) : (
+                keys[p].hasKey && <span className="ml-1 text-green-600">✓</span>
+              )}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Clé API */}
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">
-          Clé API — {info.label}
-        </label>
-        {k.hasKey && (
-          <p className="text-sm text-green-700 mb-2">
-            ✅ Clé enregistrée (se terminant par « …{k.last4} »). Laisse vide pour la conserver.
+      {/* Clé API (ou note pour le gratuit) */}
+      {provider === "free" ? (
+        <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
+          🎁 <strong>Accès gratuit</strong> — aucune clé nécessaire. Génération via des
+          modèles open-source (Llama, Gemma) hébergés sur Groq. Choisis un modèle ci-dessous.
+          {!k.hasKey && (
+            <span className="block mt-1 text-amber-700">
+              ⚠️ Mode gratuit pas encore configuré côté serveur (clé Groq manquante).
+            </span>
+          )}
+        </div>
+      ) : (
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            Clé API — {info.label}
+          </label>
+          {k.hasKey && (
+            <p className="text-sm text-green-700 mb-2">
+              ✅ Clé enregistrée (se terminant par « …{k.last4} »). Laisse vide pour la
+              conserver.
+            </p>
+          )}
+          <input
+            id="apiKey"
+            type="password"
+            name="apiKey"
+            autoComplete="off"
+            placeholder={k.hasKey ? "Saisir une nouvelle clé (optionnel)" : info.keyHint}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-brand-500 font-mono text-sm"
+          />
+          <p className="text-xs text-slate-400 mt-1">
+            Obtiens-la sur{" "}
+            <a
+              href={KEY_LINK[provider]}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              {new URL(KEY_LINK[provider]).host}
+            </a>
+            . Elle est chiffrée avant d'être stockée.
           </p>
-        )}
-        <input
-          id="apiKey"
-          type="password"
-          name="apiKey"
-          autoComplete="off"
-          placeholder={k.hasKey ? "Saisir une nouvelle clé (optionnel)" : info.keyHint}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-brand-500 font-mono text-sm"
-        />
-        <p className="text-xs text-slate-400 mt-1">
-          Obtiens-la sur{" "}
-          <a href={KEY_LINK[provider]} target="_blank" rel="noopener noreferrer" className="underline">
-            {new URL(KEY_LINK[provider]).host}
-          </a>
-          . Elle est chiffrée avant d'être stockée.
-        </p>
-      </div>
+        </div>
+      )}
 
       {/* Modèle */}
       <div>
@@ -116,8 +140,7 @@ export default function ParametresForm({
           ))}
         </datalist>
         <p className="text-xs text-slate-400 mt-1">
-          Suggestions : {info.models.join(", ")}. Tu peux saisir un autre modèle disponible sur
-          ton compte.
+          Suggestions : {info.models.join(", ")}.
         </p>
       </div>
 

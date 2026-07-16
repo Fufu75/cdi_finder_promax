@@ -111,7 +111,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ id: data.id });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erreur lors de la génération.";
-    // Erreurs typiques : clé invalide (401), crédits épuisés, etc.
-    return NextResponse.json({ error: `Claude : ${msg}` }, { status: 502 });
+    // Erreurs typiques : clé invalide (401), quota épuisé, modèle inconnu, etc.
+    return NextResponse.json({ error: `Erreur du modèle : ${msg}` }, { status: 502 });
   }
 }

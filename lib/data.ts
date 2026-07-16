@@ -12,7 +12,7 @@ export async function getProfil(): Promise<Profil> {
 }
 
 // Colonnes de stockage (clé chiffrée + 4 derniers caractères) par fournisseur.
-const COLS: Record<Provider, { enc: string; last4: string }> = {
+const COLS: Record<Exclude<Provider, "free">, { enc: string; last4: string }> = {
   anthropic: { enc: "anthropic_key_encrypted", last4: "key_last4" },
   openai: { enc: "openai_key_encrypted", last4: "openai_key_last4" },
   gemini: { enc: "gemini_key_encrypted", last4: "gemini_key_last4" },
@@ -35,9 +35,13 @@ export async function getSettings(): Promise<Settings> {
     .maybeSingle();
 
   const row = (data ?? {}) as Record<string, string | null>;
-  const provider: Provider = isProvider(row.provider) ? row.provider : "anthropic";
+  const provider: Provider = isProvider(row.provider) ? row.provider : "free";
+
+  // "free" : dispo si le serveur a une clé Groq partagée (pas de clé utilisateur).
+  const freeAvailable = !!process.env.GROQ_API_KEY;
 
   const keys = {
+    free: { hasKey: freeAvailable, last4: null },
     anthropic: { hasKey: !!row.anthropic_key_encrypted, last4: row.key_last4 ?? null },
     openai: { hasKey: !!row.openai_key_encrypted, last4: row.openai_key_last4 ?? null },
     gemini: { hasKey: !!row.gemini_key_encrypted, last4: row.gemini_key_last4 ?? null },
@@ -67,15 +71,19 @@ export async function getDecryptedKey(): Promise<{
   if (!data) return null;
 
   const row = data as Record<string, string | null>;
-  const provider: Provider = isProvider(row.provider) ? row.provider : "anthropic";
+  const provider: Provider = isProvider(row.provider) ? row.provider : "free";
+  const model = row.model || PROVIDERS[provider].defaultModel;
+
+  // "free" : clé Groq partagée, côté serveur (jamais celle de l'utilisateur).
+  if (provider === "free") {
+    const key = process.env.GROQ_API_KEY;
+    return key ? { provider, key, model } : null;
+  }
+
   const enc = row[COLS[provider].enc];
   if (!enc) return null;
 
-  return {
-    provider,
-    key: decrypt(enc),
-    model: row.model || PROVIDERS[provider].defaultModel,
-  };
+  return { provider, key: decrypt(enc), model };
 }
 
 export async function getCandidatures(): Promise<Candidature[]> {
