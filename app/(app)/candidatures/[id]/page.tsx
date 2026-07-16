@@ -1,11 +1,43 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  ArrowLeft,
+  Download,
+  ExternalLink,
+  FileText,
+  Mail,
+  StickyNote,
+  Target,
+  type LucideIcon,
+} from "lucide-react";
 import { getCandidature } from "@/lib/data";
 import { deleteCandidature } from "../actions";
 import StatutSelect from "./StatutSelect";
 import StatutBadge from "@/components/StatutBadge";
 
 export const dynamic = "force-dynamic";
+
+function Section({
+  titre,
+  icon: Icon,
+  children,
+}: {
+  titre: string;
+  icon: LucideIcon;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="mb-8">
+      <h2 className="section-title">
+        <span className="section-icon">
+          <Icon size={15} />
+        </span>
+        {titre}
+      </h2>
+      {children}
+    </section>
+  );
+}
 
 export default async function CandidaturePage({
   params,
@@ -20,48 +52,44 @@ export default async function CandidaturePage({
   const cv = c.cv_data;
 
   return (
-    <div>
-      <Link href="/dashboard" className="text-sm text-slate-500 hover:text-slate-800">
-        ← Retour aux candidatures
+    <div className="animate-fade-up">
+      <Link
+        href="/dashboard"
+        className="inline-flex items-center gap-1.5 text-sm text-stone-500 transition hover:text-stone-900"
+      >
+        <ArrowLeft size={15} />
+        Retour aux candidatures
       </Link>
 
-      <div className="mt-3 mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">{c.poste ?? "Poste"}</h1>
-        <p className="text-slate-500 mt-1">
+      <div className="mb-6 mt-4">
+        <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
+          {c.poste ?? "Poste"}
+        </h1>
+        <p className="mt-1.5 text-sm text-stone-500">
           {[c.entreprise, c.lieu, c.type_contrat].filter(Boolean).join(" · ") || "—"}
         </p>
       </div>
 
-      {/* Statut — bien visible */}
-      <div className="mb-8 rounded-xl border-2 border-brand-100 bg-brand-50/60 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      {/* Statut — l'action principale du suivi, donc mise en avant. */}
+      <div className="mb-8 flex flex-col gap-3 rounded-2xl border border-brand-200 bg-brand-50/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold text-slate-700">
-            Statut de la candidature
-          </span>
+          <span className="text-sm font-medium text-stone-700">Statut</span>
           <StatutBadge statut={c.statut} />
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Mettre à jour :</span>
-          <StatutSelect id={c.id} current={c.statut} />
-        </div>
+        <StatutSelect id={c.id} current={c.statut} />
       </div>
 
-      {/* Téléchargements */}
-      <div className="flex flex-wrap gap-3 mb-8">
+      <div className="mb-8 flex flex-wrap gap-2.5">
         {cv && (
-          <a
-            href={`/api/candidatures/${c.id}/cv`}
-            className="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-700 transition"
-          >
-            ⬇️ Télécharger le CV (.docx)
+          <a href={`/api/candidatures/${c.id}/cv`} className="btn-primary">
+            <Download size={16} />
+            CV (.docx)
           </a>
         )}
         {c.lettre && (
-          <a
-            href={`/api/candidatures/${c.id}/lettre`}
-            className="rounded-lg border border-brand-600 px-4 py-2.5 text-sm font-medium text-brand-700 hover:bg-brand-50 transition"
-          >
-            ⬇️ Télécharger la lettre (.docx)
+          <a href={`/api/candidatures/${c.id}/lettre`} className="btn-secondary">
+            <Download size={16} />
+            Lettre (.docx)
           </a>
         )}
         {c.lien_offre && (
@@ -69,68 +97,67 @@ export default async function CandidaturePage({
             href={c.lien_offre}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 transition"
+            className="btn-ghost"
           >
-            🔗 Voir l'offre
+            <ExternalLink size={16} />
+            Voir l'offre
           </a>
         )}
       </div>
 
       {c.notes && (
-        <div className="mb-8 rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
-          <span className="font-medium">Notes :</span> {c.notes}
+        <div className="alert-info mb-8">
+          <StickyNote size={17} className="mt-0.5 shrink-0 text-stone-400" />
+          <p>{c.notes}</p>
         </div>
       )}
 
-      {/* CV adapté */}
       {cv && (
-        <section className="mb-8">
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">CV adapté</h2>
-          <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
+        <Section titre="CV adapté" icon={FileText}>
+          <div className="card space-y-5 p-6">
             <p className="font-medium text-brand-700">{cv.titre_cv}</p>
-            {cv.resume && <p className="text-sm text-slate-600">{cv.resume}</p>}
+            {cv.resume && (
+              <p className="text-sm leading-relaxed text-stone-600">{cv.resume}</p>
+            )}
             {cv.experiences?.map((exp, i) => (
-              <div key={i}>
-                <p className="font-medium text-slate-800">
+              <div key={i} className="border-t border-stone-100 pt-4 first:border-0 first:pt-0">
+                <p className="font-medium text-stone-800">
                   {[exp.intitule, exp.entreprise].filter(Boolean).join(" — ")}
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="mt-0.5 text-xs text-stone-400">
                   {[exp.lieu, exp.periode].filter(Boolean).join(" · ")}
                 </p>
-                <ul className="mt-1 list-disc list-inside text-sm text-slate-600 space-y-0.5">
-                  {exp.missions?.map((m, j) => <li key={j}>{m}</li>)}
+                <ul className="mt-2 space-y-1 text-sm text-stone-600">
+                  {exp.missions?.map((m, j) => (
+                    <li key={j} className="flex gap-2">
+                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-brand-400" />
+                      {m}
+                    </li>
+                  ))}
                 </ul>
               </div>
             ))}
           </div>
-        </section>
+        </Section>
       )}
 
-      {/* Lettre */}
       {c.lettre && (
-        <section className="mb-8">
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">
-            Lettre de motivation
-          </h2>
-          <div className="rounded-xl border border-slate-200 bg-white p-6 whitespace-pre-wrap text-sm text-slate-700 leading-relaxed">
+        <Section titre="Lettre de motivation" icon={Mail}>
+          <div className="card whitespace-pre-wrap p-6 text-sm leading-relaxed text-stone-700">
             {c.lettre}
           </div>
-        </section>
+        </Section>
       )}
 
-      {/* Analyse de l'offre */}
       {offre && (
-        <section className="mb-8">
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">
-            Analyse de l'offre
-          </h2>
-          <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-700 space-y-2">
+        <Section titre="Analyse de l'offre" icon={Target}>
+          <div className="card space-y-4 p-6 text-sm text-stone-700">
             {offre.mots_cles_ats?.length ? (
               <div className="flex flex-wrap gap-1.5">
                 {offre.mots_cles_ats.map((k, i) => (
                   <span
                     key={i}
-                    className="rounded-full bg-brand-50 text-brand-700 px-2.5 py-0.5 text-xs"
+                    className="rounded-lg bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-600"
                   >
                     {k}
                   </span>
@@ -138,25 +165,23 @@ export default async function CandidaturePage({
               </div>
             ) : null}
             {offre.profil_recherche && (
-              <p>
-                <span className="font-medium">Profil recherché :</span>{" "}
+              <p className="leading-relaxed">
+                <span className="font-medium text-stone-900">Profil recherché : </span>
                 {offre.profil_recherche}
               </p>
             )}
           </div>
-        </section>
+        </Section>
       )}
 
-      {/* Suppression */}
       <form
+        className="border-t border-stone-200 pt-6"
         action={async () => {
           "use server";
           await deleteCandidature(c.id);
         }}
       >
-        <button className="text-sm text-red-600 hover:text-red-800 hover:underline">
-          Supprimer cette candidature
-        </button>
+        <button className="btn-danger -ml-4">Supprimer cette candidature</button>
       </form>
     </div>
   );

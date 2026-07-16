@@ -2,15 +2,89 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif;
-}
-
 html {
   -webkit-font-smoothing: antialiased;
 }
 
 body {
-  @apply bg-slate-50 text-slate-800;
+  @apply bg-stone-50 text-stone-900;
+}
+
+::selection {
+  @apply bg-brand-100 text-brand-900;
+}
+
+/* Primitives partagées par toutes les pages. Modifier ici se répercute partout. */
+@layer components {
+  .card {
+    @apply rounded-2xl border border-stone-200 bg-white shadow-card;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium
+           transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50
+           focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20;
+  }
+  .btn-primary {
+    @apply btn bg-gradient-to-b from-brand-500 to-brand-600 text-white shadow-brand
+           ring-1 ring-inset ring-white/20 hover:from-brand-600 hover:to-brand-700;
+  }
+  .btn-secondary {
+    @apply btn border border-stone-200 bg-white text-stone-700 shadow-card
+           hover:border-stone-300 hover:bg-stone-50;
+  }
+  .btn-ghost {
+    @apply btn text-stone-600 hover:bg-stone-100 hover:text-stone-900;
+  }
+  .btn-danger {
+    @apply btn text-red-600 hover:bg-red-50;
+  }
+
+  .field {
+    @apply w-full rounded-xl border border-stone-300 bg-white px-3.5 py-2.5 text-sm text-stone-900
+           outline-none transition placeholder:text-stone-400
+           focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-stone-700;
+  }
+  .hint {
+    @apply mt-1.5 text-xs text-stone-500;
+  }
+
+  /* Groupe de boutons type onglets (mode de saisie, langue…). */
+  .segmented {
+    @apply inline-flex gap-1 rounded-xl border border-stone-200 bg-stone-100/70 p-1;
+  }
+  .segmented-item {
+    @apply inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium
+           text-stone-500 transition hover:text-stone-900;
+  }
+  .segmented-item-active {
+    @apply bg-white text-stone-900 shadow-card ring-1 ring-stone-200 hover:text-stone-900;
+  }
+
+  /* En-tête de bloc (« CV adapté », « Lettre »…). */
+  .section-title {
+    @apply mb-3 flex items-center gap-2 text-sm font-semibold text-stone-900;
+  }
+  .section-icon {
+    @apply grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-stone-100 text-stone-500;
+  }
+
+  .alert {
+    @apply flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm;
+  }
+  .alert-info {
+    @apply alert border-stone-200 bg-white text-stone-700;
+  }
+  .alert-warn {
+    @apply alert border-amber-200 bg-amber-50 text-amber-900;
+  }
+  .alert-error {
+    @apply alert border-red-200 bg-red-50 text-red-800;
+  }
+  .alert-success {
+    @apply alert border-brand-200 bg-brand-50 text-brand-900;
+  }
 }

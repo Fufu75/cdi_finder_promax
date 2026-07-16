@@ -1,6 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  ExternalLink,
+  Gift,
+  Loader2,
+  Lock,
+  ShieldCheck,
+  TriangleAlert,
+} from "lucide-react";
 import { saveSettings } from "./actions";
 import { PROVIDERS, PROVIDER_LIST, type Provider } from "@/lib/providers";
 
@@ -46,120 +56,158 @@ export default function ParametresForm({
   const k = keys[provider];
 
   return (
-    <form action={action} className="space-y-6 max-w-xl">
+    <form action={action} className="max-w-xl space-y-7">
       <input type="hidden" name="provider" value={provider} />
 
       {/* Fournisseur */}
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-2">
-          Fournisseur d'IA
-        </label>
-        <div className="grid grid-cols-2 gap-2">
-          {PROVIDER_LIST.map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => switchProvider(p)}
-              className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition text-left ${
-                provider === p
-                  ? "border-brand-500 bg-brand-50 text-brand-700"
-                  : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              {PROVIDERS[p].label}
-              {p === "free" ? (
-                <span className="ml-1 rounded-full bg-green-100 text-green-700 px-1.5 py-0.5 text-xs">
-                  gratuit
+        <p className="label">Fournisseur d&apos;IA</p>
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          {PROVIDER_LIST.map((p) => {
+            const actif = provider === p;
+            return (
+              <button
+                key={p}
+                type="button"
+                onClick={() => switchProvider(p)}
+                aria-pressed={actif}
+                className={`flex items-center justify-between gap-2 rounded-xl border p-4 text-left transition ${
+                  actif
+                    ? "border-brand-500 bg-brand-50/60 ring-1 ring-brand-500"
+                    : "border-stone-200 bg-white hover:border-stone-300 hover:bg-stone-50"
+                }`}
+              >
+                <span
+                  className={`text-sm font-medium ${actif ? "text-brand-800" : "text-stone-700"}`}
+                >
+                  {PROVIDERS[p].label}
                 </span>
-              ) : (
-                keys[p].hasKey && <span className="ml-1 text-green-600">✓</span>
-              )}
-            </button>
-          ))}
+                {p === "free" ? (
+                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-800">
+                    <Gift size={11} />
+                    gratuit
+                  </span>
+                ) : (
+                  keys[p].hasKey && (
+                    <CheckCircle2 size={15} className="shrink-0 text-brand-600" />
+                  )
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Clé API (ou note pour le gratuit) */}
+      {/* Clé API — sauf en gratuit, où la clé est côté serveur. */}
       {provider === "free" ? (
-        <div className="rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
-          🎁 <strong>Accès gratuit</strong> — aucune clé nécessaire. Génération via des
-          modèles open-source (Llama, Gemma) hébergés sur Groq. Choisis un modèle ci-dessous.
+        <div className="space-y-2.5">
+          <div className="alert-success">
+            <Gift size={17} className="mt-0.5 shrink-0" />
+            <p>
+              <strong className="font-semibold">Accès gratuit</strong> — aucune clé
+              nécessaire. Les documents sont générés par des modèles open-source (Llama,
+              gpt-oss) hébergés sur Groq.
+            </p>
+          </div>
           {!k.hasKey && (
-            <span className="block mt-1 text-amber-700">
-              ⚠️ Mode gratuit pas encore configuré côté serveur (clé Groq manquante).
-            </span>
+            <div className="alert-warn">
+              <TriangleAlert size={17} className="mt-0.5 shrink-0" />
+              <p>Mode gratuit non configuré côté serveur (clé Groq manquante).</p>
+            </div>
           )}
         </div>
       ) : (
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
+          <label className="label" htmlFor="apiKey">
             Clé API — {info.label}
           </label>
           {k.hasKey && (
-            <p className="text-sm text-green-700 mb-2">
-              ✅ Clé enregistrée (se terminant par « …{k.last4} »). Laisse vide pour la
-              conserver.
+            <p className="mb-2 inline-flex items-center gap-1.5 text-sm text-brand-700">
+              <CheckCircle2 size={15} />
+              Clé enregistrée (…{k.last4}). Laisse vide pour la conserver.
             </p>
           )}
-          <input
-            id="apiKey"
-            type="password"
-            name="apiKey"
-            autoComplete="off"
-            placeholder={k.hasKey ? "Saisir une nouvelle clé (optionnel)" : info.keyHint}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-brand-500 font-mono text-sm"
-          />
-          <p className="text-xs text-slate-400 mt-1">
-            Obtiens-la sur{" "}
+          <div className="relative">
+            <Lock
+              size={15}
+              className="pointer-events-none absolute inset-y-0 left-3.5 my-auto text-stone-400"
+            />
+            <input
+              id="apiKey"
+              type="password"
+              name="apiKey"
+              autoComplete="off"
+              placeholder={k.hasKey ? "Saisir une nouvelle clé (optionnel)" : info.keyHint}
+              className="field pl-10 font-mono"
+            />
+          </div>
+          <p className="hint flex items-center gap-1.5">
+            <ShieldCheck size={13} className="shrink-0 text-brand-600" />
+            Chiffrée avant stockage. À créer sur{" "}
             <a
               href={KEY_LINK[provider]}
               target="_blank"
               rel="noopener noreferrer"
-              className="underline"
+              className="inline-flex items-center gap-1 font-medium text-stone-700 underline underline-offset-2 hover:text-brand-700"
             >
               {new URL(KEY_LINK[provider]).host}
+              <ExternalLink size={11} />
             </a>
-            . Elle est chiffrée avant d'être stockée.
           </p>
         </div>
       )}
 
       {/* Modèle */}
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Modèle</label>
+        <label className="label" htmlFor="model">
+          Modèle
+        </label>
         <input
+          id="model"
           name="model"
           list={`models-${provider}`}
           value={model}
           onChange={(e) => setModel(e.target.value)}
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-brand-500"
+          className="field font-mono"
         />
         <datalist id={`models-${provider}`}>
           {info.models.map((m) => (
             <option key={m} value={m} />
           ))}
         </datalist>
-        <p className="text-xs text-slate-400 mt-1">
-          Suggestions : {info.models.join(", ")}.
-        </p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {info.models.map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setModel(m)}
+              className={`rounded-lg px-2 py-1 font-mono text-xs transition ${
+                model === m
+                  ? "bg-brand-100 text-brand-800"
+                  : "bg-stone-100 text-stone-500 hover:bg-stone-200 hover:text-stone-700"
+              }`}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
       </div>
 
       {status?.error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-          {status.error}
+        <div className="alert-error">
+          <AlertCircle size={17} className="mt-0.5 shrink-0" />
+          <p>{status.error}</p>
         </div>
       )}
       {status?.ok && (
-        <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
-          Paramètres enregistrés.
+        <div className="alert-success">
+          <CheckCircle2 size={17} className="mt-0.5 shrink-0" />
+          <p>Paramètres enregistrés.</p>
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={saving}
-        className="rounded-lg bg-brand-600 px-5 py-2.5 font-medium text-white hover:bg-brand-700 transition disabled:opacity-50"
-      >
+      <button type="submit" disabled={saving} className="btn-primary">
+        {saving && <Loader2 size={16} className="animate-spin" />}
         {saving ? "Enregistrement…" : "Enregistrer"}
       </button>
     </form>

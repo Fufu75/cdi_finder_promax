@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { ArrowRight, FileWarning, Inbox, Sparkles } from "lucide-react";
 import { getCandidatures, getSettings } from "@/lib/data";
 import StatutBadge from "@/components/StatutBadge";
+import PageHeader from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -10,66 +12,74 @@ export default async function DashboardPage() {
     getSettings(),
   ]);
 
+  const n = candidatures.length;
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Mes candidatures</h1>
-          <p className="text-slate-500 mt-1">
-            {candidatures.length} candidature{candidatures.length > 1 ? "s" : ""}.
-          </p>
-        </div>
-        <Link
-          href="/nouvelle"
-          className="rounded-lg bg-brand-600 px-4 py-2.5 font-medium text-white hover:bg-brand-700 transition"
-        >
-          ✨ Nouvelle candidature
-        </Link>
-      </div>
+    <div className="animate-fade-up">
+      <PageHeader
+        titre="Mes candidatures"
+        sous_titre={n === 0 ? "Aucune candidature." : `${n} candidature${n > 1 ? "s" : ""}.`}
+        action={
+          <Link href="/nouvelle" className="btn-primary">
+            <Sparkles size={16} strokeWidth={2.2} />
+            Nouvelle candidature
+          </Link>
+        }
+      />
 
       {!settings.hasKey && (
-        <div className="mb-6 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-          Tu n'as pas encore renseigné ta clé API Anthropic.{" "}
-          <Link href="/parametres" className="font-semibold underline">
-            Ajoute-la dans Paramètres
-          </Link>{" "}
-          pour pouvoir générer des documents.
+        <div className="alert-warn mb-6">
+          <FileWarning size={17} className="mt-0.5 shrink-0" />
+          <p>
+            Aucun fournisseur d'IA configuré.{" "}
+            <Link href="/parametres" className="font-semibold underline underline-offset-2">
+              Ouvre les Paramètres
+            </Link>{" "}
+            — l'accès gratuit ne demande aucune clé.
+          </p>
         </div>
       )}
 
-      {candidatures.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white py-16 text-center">
-          <p className="text-slate-400">Aucune candidature pour l'instant.</p>
-          <Link
-            href="/nouvelle"
-            className="inline-block mt-4 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
-          >
+      {n === 0 ? (
+        <div className="card grid place-items-center px-6 py-16 text-center">
+          <span className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-stone-100 text-stone-400">
+            <Inbox size={22} />
+          </span>
+          <p className="font-medium text-stone-800">Rien ici pour l'instant</p>
+          <p className="mt-1 max-w-sm text-sm text-stone-500">
+            Colle ta première offre : l'agent en tire un CV adapté et une lettre de
+            motivation.
+          </p>
+          <Link href="/nouvelle" className="btn-primary mt-6">
+            <Sparkles size={16} strokeWidth={2.2} />
             Créer la première
           </Link>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {candidatures.map((c) => (
             <Link
               key={c.id}
               href={`/candidatures/${c.id}`}
-              className="block rounded-xl border border-slate-200 bg-white px-5 py-4 hover:border-brand-300 hover:shadow-sm transition"
+              className="card group flex items-center gap-4 px-5 py-4 transition hover:border-brand-300 hover:shadow-lift"
             >
-              <div className="flex items-center justify-between">
-                <div className="min-w-0">
-                  <p className="font-semibold text-slate-900 truncate">
-                    {c.poste ?? "Poste non défini"}
-                  </p>
-                  <p className="text-sm text-slate-500 truncate">
-                    {[c.entreprise, c.lieu].filter(Boolean).join(" · ") || "—"}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <StatutBadge statut={c.statut} />
-                  <span className="text-xs text-slate-400">
-                    {new Date(c.created_at).toLocaleDateString("fr-FR")}
-                  </span>
-                </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium text-stone-900">
+                  {c.poste ?? "Poste non défini"}
+                </p>
+                <p className="mt-0.5 truncate text-sm text-stone-500">
+                  {[c.entreprise, c.lieu].filter(Boolean).join(" · ") || "—"}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                <StatutBadge statut={c.statut} />
+                <span className="hidden text-xs tabular-nums text-stone-400 sm:block">
+                  {new Date(c.created_at).toLocaleDateString("fr-FR")}
+                </span>
+                <ArrowRight
+                  size={16}
+                  className="text-stone-300 transition group-hover:translate-x-0.5 group-hover:text-brand-600"
+                />
               </div>
             </Link>
           ))}

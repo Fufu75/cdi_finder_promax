@@ -1,5 +1,6 @@
 import { getProfil, getSettings } from "@/lib/data";
 import ProfilForm from "./ProfilForm";
+import PageHeader from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -11,11 +12,11 @@ export default async function ProfilPage() {
       : "{}";
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-slate-900 mb-1">Mon profil</h1>
-      <p className="text-slate-500 mb-8">
-        Tes expériences, formations et compétences réelles.
-      </p>
+    <div className="animate-fade-up">
+      <PageHeader
+        titre="Mon profil"
+        sous_titre="Tes expériences, formations et compétences réelles — la seule matière que l'agent utilise."
+      />
       <ProfilForm initial={initial} hasKey={settings.hasKey} />
     </div>
   );

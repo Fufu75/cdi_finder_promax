@@ -95,6 +95,15 @@ export async function getCandidatures(): Promise<Candidature[]> {
   return (data as Candidature[]) ?? [];
 }
 
+// Compteur pour la barre latérale : `head` évite de rapatrier les lignes.
+export async function getCandidaturesCount(): Promise<number> {
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from("candidatures")
+    .select("id", { count: "exact", head: true });
+  return count ?? 0;
+}
+
 export async function getCandidature(id: string): Promise<Candidature | null> {
   const supabase = await createClient();
   const { data } = await supabase

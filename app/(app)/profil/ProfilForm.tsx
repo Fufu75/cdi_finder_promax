@@ -1,6 +1,16 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Code2,
+  Loader2,
+  Sparkles,
+  TriangleAlert,
+  Upload,
+} from "lucide-react";
 import { saveProfil } from "./actions";
 
 const TEMPLATE = {
@@ -103,112 +113,130 @@ export default function ProfilForm({
 
   return (
     <div>
-      {/* Onglets */}
-      <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-1 mb-6 max-w-md">
-        <button
-          type="button"
-          onClick={() => setTab("import")}
-          className={`flex-1 rounded-md py-2 text-sm font-medium transition ${
-            tab === "import" ? "bg-white shadow text-slate-900" : "text-slate-500"
-          }`}
-        >
-          Importer mon CV
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("json")}
-          className={`flex-1 rounded-md py-2 text-sm font-medium transition ${
-            tab === "json" ? "bg-white shadow text-slate-900" : "text-slate-500"
-          }`}
-        >
-          Éditer manuellement
-        </button>
+      <div className="segmented mb-6">
+        {(
+          [
+            { t: "import" as const, icon: Upload, label: "Importer mon CV" },
+            { t: "json" as const, icon: Code2, label: "Éditer manuellement" },
+          ]
+        ).map(({ t, icon: Icon, label }) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            className={`segmented-item ${tab === t ? "segmented-item-active" : ""}`}
+          >
+            <Icon size={14} />
+            {label}
+          </button>
+        ))}
       </div>
 
       {tab === "import" ? (
         <div className="space-y-6">
           {!hasKey && (
-            <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-              Ajoute d'abord ta clé API dans <strong>Paramètres</strong> pour utiliser
-              l'extraction.
+            <div className="alert-warn">
+              <TriangleAlert size={17} className="mt-0.5 shrink-0" />
+              <p>
+                L&apos;extraction a besoin d&apos;un fournisseur d&apos;IA.{" "}
+                <Link
+                  href="/parametres"
+                  className="font-semibold underline underline-offset-2"
+                >
+                  Ouvre les Paramètres
+                </Link>{" "}
+                — l&apos;accès gratuit ne demande aucune clé.
+              </p>
             </div>
           )}
 
-          <div>
-            <p className="text-sm text-slate-600 mb-3">
-              Envoie ton CV (PDF ou Word) ou colle son texte : Claude en extrait
-              automatiquement tes expériences, formations et compétences. Tu pourras
-              tout relire avant d'enregistrer.
+          <div className="card p-6">
+            <p className="mb-5 text-sm leading-relaxed text-stone-600">
+              Envoie ton CV (PDF ou Word) ou colle son texte : le modèle en extrait tes
+              expériences, formations et compétences. Tu relis tout avant d&apos;enregistrer.
             </p>
 
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Fichier CV (PDF, DOCX, TXT)
+            <label className="label" htmlFor="cv-file">
+              Fichier CV <span className="font-normal text-stone-400">(PDF, DOCX, TXT)</span>
             </label>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <input
+                id="cv-file"
                 ref={fileRef}
                 type="file"
                 accept=".pdf,.docx,.txt"
-                className="text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-4 file:py-2 file:text-brand-700 file:font-medium hover:file:bg-brand-100"
+                className="min-w-0 flex-1 text-sm text-stone-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-brand-50 file:px-4 file:py-2 file:font-medium file:text-brand-700 hover:file:bg-brand-100"
               />
               <button
                 type="button"
                 onClick={handleFile}
                 disabled={extracting || !hasKey}
-                className="shrink-0 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 transition disabled:opacity-50"
+                className="btn-primary shrink-0"
               >
+                {extracting ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Sparkles size={16} strokeWidth={2.2} />
+                )}
                 {extracting ? "Extraction…" : "Extraire"}
               </button>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3 text-xs text-slate-400">
-            <span className="flex-1 h-px bg-slate-200" />
-            ou colle le texte
-            <span className="flex-1 h-px bg-slate-200" />
-          </div>
+            <div className="my-6 flex items-center gap-3 text-xs text-stone-400">
+              <span className="h-px flex-1 bg-stone-200" />
+              ou colle le texte
+              <span className="h-px flex-1 bg-stone-200" />
+            </div>
 
-          <div>
             <textarea
               value={cvTexte}
               onChange={(e) => setCvTexte(e.target.value)}
               rows={8}
               placeholder="Colle ici le texte de ton CV…"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+              className="field resize-y leading-relaxed"
             />
             <button
               type="button"
               onClick={() => extractFrom({ texte: cvTexte })}
               disabled={extracting || !hasKey || cvTexte.trim().length < 50}
-              className="mt-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 transition disabled:opacity-50"
+              className="btn-secondary mt-3"
             >
-              {extracting ? "Extraction…" : "Extraire depuis le texte"}
+              {extracting ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Sparkles size={16} />
+              )}
+              Extraire depuis le texte
             </button>
           </div>
 
           {importError && (
-            <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-              {importError}
+            <div className="alert-error">
+              <AlertCircle size={17} className="mt-0.5 shrink-0" />
+              <p>{importError}</p>
             </div>
           )}
         </div>
       ) : (
         <div className="space-y-4">
           {imported && (
-            <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
-              ✅ Profil extrait. Relis-le et corrige si besoin, puis clique sur
-              « Enregistrer le profil ».
+            <div className="alert-success">
+              <CheckCircle2 size={17} className="mt-0.5 shrink-0" />
+              <p>
+                Profil extrait. Relis-le et corrige si besoin, puis enregistre.
+              </p>
             </div>
           )}
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-500">
-              Tes données au format JSON. L'agent ne fait que sélectionner et reformuler —
-              il n'invente jamais rien.
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <p className="text-sm text-stone-500">
+              Tes données au format JSON. L&apos;agent ne fait que sélectionner et
+              reformuler — il n&apos;invente jamais rien.
             </p>
             <button
               type="button"
               onClick={() => setValue(JSON.stringify(TEMPLATE, null, 2))}
-              className="shrink-0 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"
+              className="btn-secondary shrink-0 px-3 py-1.5 text-xs"
             >
               Insérer un modèle vide
             </button>
@@ -219,17 +247,19 @@ export default function ProfilForm({
             onChange={(e) => setValue(e.target.value)}
             rows={24}
             spellCheck={false}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-brand-500 font-mono text-xs leading-relaxed"
+            className="field resize-y font-mono text-xs leading-relaxed"
           />
 
           {status?.error && (
-            <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-              {status.error}
+            <div className="alert-error">
+              <AlertCircle size={17} className="mt-0.5 shrink-0" />
+              <p>{status.error}</p>
             </div>
           )}
           {status?.ok && (
-            <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
-              Profil enregistré.
+            <div className="alert-success">
+              <CheckCircle2 size={17} className="mt-0.5 shrink-0" />
+              <p>Profil enregistré.</p>
             </div>
           )}
 
@@ -237,8 +267,9 @@ export default function ProfilForm({
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="rounded-lg bg-brand-600 px-5 py-2.5 font-medium text-white hover:bg-brand-700 transition disabled:opacity-50"
+            className="btn-primary"
           >
+            {saving && <Loader2 size={16} className="animate-spin" />}
             {saving ? "Enregistrement…" : "Enregistrer le profil"}
           </button>
         </div>

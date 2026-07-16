@@ -2,8 +2,64 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  AlertCircle,
+  Check,
+  ClipboardType,
+  FileText,
+  Link2,
+  Loader2,
+  Mail,
+  Sparkles,
+  TriangleAlert,
+} from "lucide-react";
 
 type Mode = "url" | "texte";
+
+/** Case à cocher présentée comme une carte cliquable. */
+function DocToggle({
+  checked,
+  onChange,
+  icon: Icon,
+  titre,
+  desc,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  icon: typeof FileText;
+  titre: string;
+  desc: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      aria-pressed={checked}
+      className={`flex flex-1 items-start gap-3 rounded-xl border p-4 text-left transition ${
+        checked
+          ? "border-brand-500 bg-brand-50/60 ring-1 ring-brand-500"
+          : "border-stone-200 bg-white hover:border-stone-300 hover:bg-stone-50"
+      }`}
+    >
+      <Icon
+        size={18}
+        className={`mt-0.5 shrink-0 ${checked ? "text-brand-600" : "text-stone-400"}`}
+      />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-stone-900">{titre}</p>
+        <p className="mt-0.5 text-xs text-stone-500">{desc}</p>
+      </div>
+      <span
+        className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-md border transition ${
+          checked ? "border-brand-600 bg-brand-600 text-white" : "border-stone-300"
+        }`}
+      >
+        {checked && <Check size={11} strokeWidth={3.5} />}
+      </span>
+    </button>
+  );
+}
 
 export default function NouvelleForm({ hasKey }: { hasKey: boolean }) {
   const router = useRouter();
@@ -46,139 +102,142 @@ export default function NouvelleForm({ hasKey }: { hasKey: boolean }) {
     }
   }
 
+  const libelle = loading
+    ? "Génération en cours… (30-60 s)"
+    : produireCv && produireLettre
+      ? "Générer le CV et la lettre"
+      : produireCv
+        ? "Générer le CV"
+        : "Générer la lettre";
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-7">
       {!hasKey && (
-        <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-          Ajoute d'abord ta clé API dans <strong>Paramètres</strong>.
+        <div className="alert-warn">
+          <TriangleAlert size={17} className="mt-0.5 shrink-0" />
+          <p>
+            Aucun fournisseur d'IA configuré.{" "}
+            <Link href="/parametres" className="font-semibold underline underline-offset-2">
+              Ouvre les Paramètres
+            </Link>{" "}
+            — l'accès gratuit ne demande aucune clé.
+          </p>
         </div>
       )}
 
-      <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
-        {(["texte", "url"] as Mode[]).map((m) => (
-          <button
-            key={m}
-            type="button"
-            onClick={() => setMode(m)}
-            className={`px-4 py-1.5 text-sm font-medium rounded-md transition ${
-              mode === m ? "bg-brand-600 text-white" : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            {m === "texte" ? "Coller le texte" : "Depuis une URL"}
-          </button>
-        ))}
-      </div>
-
-      {mode === "url" ? (
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
-            URL de l'offre
-          </label>
-          <input
-            type="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://..."
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-brand-500"
-          />
-          <p className="text-xs text-slate-400 mt-1">
-            LinkedIn et Indeed bloquent souvent la lecture : dans ce cas, colle le texte.
-          </p>
+      {/* Source de l'offre */}
+      <div>
+        <p className="label">L&apos;offre</p>
+        <div className="segmented mb-3">
+          {(
+            [
+              { m: "texte" as Mode, icon: ClipboardType, label: "Coller le texte" },
+              { m: "url" as Mode, icon: Link2, label: "Depuis une URL" },
+            ]
+          ).map(({ m, icon: Icon, label }) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMode(m)}
+              className={`segmented-item ${mode === m ? "segmented-item-active" : ""}`}
+            >
+              <Icon size={14} />
+              {label}
+            </button>
+          ))}
         </div>
-      ) : (
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
-            Texte de l'offre
-          </label>
+
+        {mode === "url" ? (
+          <>
+            <input
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://…"
+              className="field"
+            />
+            <p className="hint">
+              LinkedIn et Indeed bloquent souvent la lecture : dans ce cas, colle le texte.
+            </p>
+          </>
+        ) : (
           <textarea
             value={texte}
             onChange={(e) => setTexte(e.target.value)}
             rows={12}
             placeholder="Colle ici le texte complet de l'offre…"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-brand-500 font-mono text-sm"
+            className="field resize-y leading-relaxed"
           />
-        </div>
-      )}
-
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">
-          Notes (optionnel)
-        </label>
-        <input
-          type="text"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Ex : candidature prioritaire, relancer le 15…"
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-brand-500"
-        />
+        )}
       </div>
 
+      {/* Documents */}
       <div>
-        <p className="block text-sm font-medium text-slate-700 mb-2">Langue</p>
-        <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
+        <p className="label">Documents à générer</p>
+        <div className="flex flex-col gap-2.5 sm:flex-row">
+          <DocToggle
+            checked={produireCv}
+            onChange={setProduireCv}
+            icon={FileText}
+            titre="CV adapté"
+            desc="Reformulé sur les mots-clés de l'offre"
+          />
+          <DocToggle
+            checked={produireLettre}
+            onChange={setProduireLettre}
+            icon={Mail}
+            titre="Lettre de motivation"
+            desc="Personnalisée pour l'entreprise"
+          />
+        </div>
+      </div>
+
+      {/* Langue */}
+      <div>
+        <p className="label">Langue des documents</p>
+        <div className="segmented">
           {(["fr", "en"] as const).map((l) => (
             <button
               key={l}
               type="button"
               onClick={() => setLangue(l)}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition ${
-                langue === l ? "bg-brand-600 text-white" : "text-slate-600 hover:bg-slate-100"
-              }`}
+              className={`segmented-item ${langue === l ? "segmented-item-active" : ""}`}
             >
-              {l === "fr" ? "🇫🇷 Français" : "🇬🇧 English"}
+              {l === "fr" ? "Français" : "English"}
             </button>
           ))}
         </div>
       </div>
 
+      {/* Notes */}
       <div>
-        <p className="block text-sm font-medium text-slate-700 mb-2">
-          Documents à générer
-        </p>
-        <div className="flex gap-4">
-          <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={produireCv}
-              onChange={(e) => setProduireCv(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-            />
-            CV adapté
-          </label>
-          <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={produireLettre}
-              onChange={(e) => setProduireLettre(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-            />
-            Lettre de motivation
-          </label>
-        </div>
+        <label className="label" htmlFor="notes">
+          Notes <span className="font-normal text-stone-400">(optionnel)</span>
+        </label>
+        <input
+          id="notes"
+          type="text"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Ex : candidature prioritaire, relancer le 15…"
+          className="field"
+        />
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-          {error}
+        <div className="alert-error">
+          <AlertCircle size={17} className="mt-0.5 shrink-0" />
+          <p>{error}</p>
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={loading || !hasKey}
-        className="rounded-lg bg-brand-600 px-5 py-2.5 font-medium text-white hover:bg-brand-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {loading
-          ? "Génération en cours… (30-60 s)"
-          : `Générer ${
-              produireCv && produireLettre
-                ? "CV + Lettre"
-                : produireCv
-                  ? "le CV"
-                  : produireLettre
-                    ? "la lettre"
-                    : ""
-            }`}
+      <button type="submit" disabled={loading || !hasKey} className="btn-primary w-full sm:w-auto">
+        {loading ? (
+          <Loader2 size={16} className="animate-spin" />
+        ) : (
+          <Sparkles size={16} strokeWidth={2.2} />
+        )}
+        {libelle}
       </button>
     </form>
   );
